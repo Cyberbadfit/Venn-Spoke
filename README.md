@@ -59,6 +59,10 @@ npm run build
 
 Publish the contents of `dist/` through GitHub Pages (or configure a GitHub Actions workflow to do so). For a production system, deploy the API separately and set `VITE_API_URL` to its HTTPS URL.
 
+## Vercel deployment
+
+Vercel detects the included `vercel.json` and deploys the Vite production build from `dist/`. Import `Cyberbadfit/Venn-Spoke` in Vercel, keep the default build settings, and deploy. The public static deployment uses the in-browser demo data store; connect an external API and configure `VITE_API_URL` when production-wide shared users, orders, and inventory are required.
+
 ## Demo payment behaviour
 
 The payment gateway is a **front-end simulation**. It is intentionally designed not to charge real money or record financial information.
