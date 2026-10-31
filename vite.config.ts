@@ -1,8 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const githubRepository = process.env.GITHUB_REPOSITORY?.split("/")[1];
+
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? "/Full-Stack-Web-Development-Projects/" : "/",
+  // GitHub Pages serves project sites below /<repository>/.
+  // Vercel and local development serve from the domain root.
+  base: process.env.GITHUB_ACTIONS && githubRepository ? `/${githubRepository}/` : "/",
   plugins: [react()],
   server: {
     proxy: {

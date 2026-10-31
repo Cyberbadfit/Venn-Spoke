@@ -11,12 +11,52 @@ const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(__dirname, "data", "store.json");
 const port = Number(process.env.PORT || 4000);
-const secret = process.env.JWT_SECRET || "local-demo-change-me-before-production";
+const isProduction = process.env.NODE_ENV === "production";
+const secret = process.env.JWT_SECRET || (isProduction ? "" : "local-demo-change-me-before-production");
 const adminEmail = process.env.ADMIN_EMAIL || "admin@nexora.local";
-const adminPassword = process.env.ADMIN_PASSWORD || "muradnagar";
+const adminPassword = process.env.ADMIN_PASSWORD || (isProduction ? "" : "muradnagar");
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173,http://127.0.0.1:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors({ origin: true }));
+if (isProduction && (!secret || !adminPassword)) {
+  throw new Error("JWT_SECRET and ADMIN_PASSWORD must be set in production.");
+}
+
+app.disable("x-powered-by");
+app.use((_, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+});
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Origin is not allowed by CORS."));
+  },
+}));
 app.use(express.json({ limit: "100kb" }));
+
+const loginAttempts = new Map();
+function limitLogin(req, res, next) {
+  const key = req.ip || "unknown";
+  const now = Date.now();
+  const attempt = loginAttempts.get(key) || { count: 0, resetAt: now + 15 * 60_000 };
+  if (now > attempt.resetAt) {
+    attempt.count = 0;
+    attempt.resetAt = now + 15 * 60_000;
+  }
+  if (attempt.count >= 5) return res.status(429).json({ error: "Too many login attempts. Try again in 15 minutes." });
+  attempt.count += 1;
+  loginAttempts.set(key, attempt);
+  res.once("finish", () => {
+    if (res.statusCode < 400) loginAttempts.delete(key);
+  });
+  next();
+}
 
 const baseProducts = [
   ["Aero Carry","Travel",4990,"Carbon","https://images.unsplash.com/photo-1553531889-56f3f7f68b82?auto=format&fit=crop&w=900&q=85","Bestseller"],
@@ -62,7 +102,7 @@ app.get("/api/products", (_,res) => { const db=load(); res.json(db.products); })
 app.get("/api/announcement", (_,res) => res.json({ message:load().announcement }));
 app.post("/api/orders", (req,res) => { const { customer, items, paymentMethod="upi" } = req.body; if (!customer?.name || !customer?.email || !customer?.phone || !Array.isArray(items) || !items.length) return res.status(400).json({ error:"Name, email, phone and order items are required." }); const db=load(); const normalized=items.map(({ id, quantity }) => { const p=db.products.find(x=>x.id===id && x.available); return p && { id:p.id,name:p.name,image:p.image,price:p.price,quantity:Math.max(1,Number(quantity)||1) }; }).filter(Boolean); if (!normalized.length) return res.status(400).json({ error:"Selected products are unavailable." }); const subtotal=normalized.reduce((s,i)=>s+i.price*i.quantity,0); const order={ id:`NX-${db.nextOrder++}`, customer:{ name:customer.name.trim(), email:customer.email.trim().toLowerCase(), phone:customer.phone.trim(), address:(customer.address||"").trim() }, items:normalized, subtotal, shipping:subtotal>=1999?0:99, total:subtotal+(subtotal>=1999?0:99), paymentMethod, paymentStatus:"demo_paid", status:"Order received", timeline:[{ status:"Order received", at:new Date().toISOString(), note:"Your order has been confirmed." }], createdAt:new Date().toISOString() }; db.orders.unshift(order); let user=db.users.find(u=>u.email===order.customer.email); if(!user){ user={ id:`u-${db.users.length+1}`, ...order.customer, createdAt:new Date().toISOString() }; db.users.push(user); } normalized.forEach(item=>{const p=db.products.find(x=>x.id===item.id); p.stock=Math.max(0,p.stock-item.quantity); if(!p.stock) p.available=false;}); save(db); res.status(201).json(order); });
 app.get("/api/orders/:id", (req,res) => { const order=load().orders.find(o=>o.id.toLowerCase()===req.params.id.toLowerCase()); return order ? res.json(order) : res.status(404).json({ error:"We couldn't find that order." }); });
-app.post("/api/admin/login", async (req,res) => { const { email,password }=req.body; if(email!==adminEmail || password!==adminPassword) return res.status(401).json({error:"Incorrect email or password."}); const token=jwt.sign({role:"admin",email},secret,{expiresIn:"8h"}); res.json({token,email}); });
+app.post("/api/admin/login", limitLogin, async (req,res) => { const { email,password }=req.body; if(email!==adminEmail || password!==adminPassword) return res.status(401).json({error:"Incorrect email or password."}); const token=jwt.sign({role:"admin",email},secret,{expiresIn:"8h"}); res.json({token,email}); });
 app.get("/api/admin/dashboard", requireAdmin, (_,res) => { const db=load(); res.json({ products:db.products, orders:db.orders, users:db.users, announcement:db.announcement }); });
 app.post("/api/admin/products", requireAdmin, (req,res) => { const { name,category,price,color,image,stock }=req.body; if(!name||!category||!price) return res.status(400).json({error:"Name, category and price are required."}); const db=load(); const product={ id:`p-${Date.now()}`, name, category, price:Number(price), color:color||"Default", image:image||"https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85", rating:4.8, available:true, stock:Number(stock)||0, tag:"New"}; db.products.unshift(product); save(db); res.status(201).json(product); });
 app.patch("/api/admin/products/:id", requireAdmin, (req,res) => { const db=load(); const product=db.products.find(p=>p.id===req.params.id); if(!product) return res.status(404).json({error:"Product not found"}); Object.assign(product, req.body, { price:req.body.price===undefined?product.price:Number(req.body.price), stock:req.body.stock===undefined?product.stock:Number(req.body.stock) }); if(product.stock<=0) product.available=false; save(db); res.json(product); });

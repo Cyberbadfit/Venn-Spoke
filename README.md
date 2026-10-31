@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <a href="#highlights">Explore features</a> · <a href="#run-locally">Run locally</a> · <a href="#github-pages-deployment">Deploy</a> · <a href="#local-database-and-admin-login">Admin guide</a>
+  <a href="#highlights">Explore features</a> · <a href="#run-locally">Run locally</a> · <a href="#github-pages-deployment">Deploy</a> · <a href="#security-and-production">Security</a>
 </p>
 
 ## Highlights
@@ -74,16 +74,15 @@ The payment gateway is a **front-end simulation**. It is intentionally designed 
 
 For real payments, connect a PCI-compliant server-side order flow with a provider such as Razorpay, Cashfree, PhonePe PG, or PayU. Do not handle card data or mark payments as successful in the browser.
 
-## Local database and admin login
+## Security and production
 
-The app uses a persistent local file database at `data/store.json`, created automatically on the first API request. It requires no database server, username, or database password. It is suitable for a local demo only; use PostgreSQL/MySQL plus managed backups for a deployment.
+The local API uses a persistent development-only file database at `data/store.json`, created automatically on the first API request. It is suitable for local testing only; use a managed database such as Supabase Postgres for a deployment.
 
 `data/`, `.env`, build files, and local logs are excluded through `.gitignore` so private order data and local configuration cannot be committed to GitHub.
 
-- Admin email: `admin@nexora.local`
-- Initial admin password: `muradnagar`
+Before a production deployment, set unique values for `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `CORS_ORIGIN` in the host's encrypted environment-variable settings. The API refuses to start in production without the required secret and password, restricts CORS to configured origins, applies basic login throttling, and returns security headers.
 
-The password is validated by the API and a short-lived signed session token protects admin routes. Copy `.env.example` to `.env` and change `JWT_SECRET`, `ADMIN_EMAIL`, and especially `ADMIN_PASSWORD` before deploying. The supplied password is intentionally retained only because it was requested; it is not a safe production credential.
+Do not publish admin credentials, JWT secrets, database URLs, or customer data in the repository or frontend source. The existing GitHub Pages and static Vercel builds are **catalog demos**, not a secure multi-user database. Connect a server-side API and database before accepting real customer information.
 
 ## Order tracking flow
 
