@@ -1,12 +1,25 @@
-# Venn Spoke — Everyday, elevated.
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1b2a,100:ff6b35&height=180&section=header&text=VENN%20SPOKE&fontSize=54&fontColor=ffffff&fontAlignY=36&desc=Everyday%2C%20elevated.&descSize=18&descAlignY=57&animation=fadeIn" alt="Venn Spoke" />
+</p>
 
-> A responsive, high-end e-commerce storefront with INR checkout, order tracking, and a local operations console.
+<p align="center">
+  <strong>A responsive e-commerce experience with INR checkout, order tracking, and a local operations console.</strong>
+</p>
 
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=061827) ![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?style=flat-square&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-Fast-646CFF?style=flat-square&logo=vite&logoColor=white)
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=061827" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-Ready-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-Fast-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Payments-Demo%20only-ff6b35?style=for-the-badge" alt="Demo payments only" />
+</p>
 
 <p align="center">
   <a href="https://github.com/Cyberbadfit"><img src="https://img.shields.io/badge/Developer-Cyberbadfit-0d1b2a?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
   <a href="https://www.instagram.com/cyber_badfit?igsh=bWpyYWg1dW14cW1x"><img src="https://img.shields.io/badge/Instagram-@cyber__badfit-ff6b35?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram" /></a>
+</p>
+
+<p align="center">
+  <a href="#highlights">Explore features</a> · <a href="#run-locally">Run locally</a> · <a href="#github-pages-deployment">Deploy</a> · <a href="#local-database-and-admin-login">Admin guide</a>
 </p>
 
 ## Highlights
