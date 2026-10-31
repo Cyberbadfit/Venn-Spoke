@@ -1,0 +1,19 @@
+# Secrets and local runtime data
+.env
+.env.*
+!.env.example
+data/
+
+# Dependencies and build output
+node_modules/
+dist/
+
+# Local preview and diagnostic logs
+*.log
+*.out.log
+*.err.log
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
