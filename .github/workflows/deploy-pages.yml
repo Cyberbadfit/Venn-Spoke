@@ -2,7 +2,7 @@ name: Deploy Venn Spoke to GitHub Pages
 
 on:
   push:
-    branches: [venn-spoke]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
